@@ -1,0 +1,1 @@
+import{r as e}from"./rolldown-runtime-S-ySWqyJ.js";import{i as t,r as n}from"./framework-CXnKph_e.js";import{t as r}from"./interactive-phone-BZmgToTf.js";var i=e(t(),1),a=n();function o(){let[e,t]=(0,i.useState)(`studio`);return(0,a.jsx)(`div`,{className:`works-phone`,id:`how-phone-demo`,children:(0,a.jsx)(r,{page:e,onPageChange:t,tilt:0})})}export{o as default};

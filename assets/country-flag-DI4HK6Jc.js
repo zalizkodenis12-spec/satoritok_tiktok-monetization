@@ -1,0 +1,1 @@
+import{r as e}from"./framework-CXnKph_e.js";var t=e(),n=new Set([`fr`,`de`,`gb`,`us`,`kr`]);function r({country:e}){return n.has(e)?(0,t.jsx)(`img`,{className:`country-flag`,src:`/flags/${e}.svg`,width:32,height:24,alt:``,"aria-hidden":`true`}):null}export{r as t};

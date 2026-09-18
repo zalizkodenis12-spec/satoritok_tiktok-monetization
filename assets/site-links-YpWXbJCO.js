@@ -1,0 +1,1 @@
+var e=`https://t.me/dew1tt`,t=`https://www.tiktok.com/@vladmonetization`;function n(t){return`${e}?text=${encodeURIComponent(t)}`}export{t as n,n as r,e as t};
