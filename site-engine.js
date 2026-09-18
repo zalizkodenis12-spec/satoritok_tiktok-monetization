@@ -11,6 +11,7 @@
     initAccordions();
     initNavigationAndLinks();
     initMobileMenu();
+    enforceCommunityAndConsultant();
   }
 
   // ==========================================
@@ -830,6 +831,85 @@
         });
       });
     }
+  }
+
+  // ==========================================
+  // 9. ENFORCE COMMUNITY PASS & CONSULTANT REBRAND
+  // ==========================================
+  function enforceCommunityAndConsultant() {
+    var lang = document.documentElement.lang || 'ru';
+    var isUk = lang === 'uk';
+    var isEn = lang === 'en';
+
+    function update() {
+      // 1. Consultant card
+      var consultantH3 = document.querySelector('.call-person h3, .consultation-grid h3');
+      if (consultantH3) {
+        consultantH3.textContent = isEn ? 'Denis' : 'Денис';
+      }
+      var consultantImg = document.querySelector('.call-avatar-ring img, .call-person img');
+      if (consultantImg) {
+        consultantImg.setAttribute('alt', isEn ? 'Denis — creator of SATORITOK' : 'Денис — автор SATORITOK');
+      }
+
+      // 2. Community Pass
+      var communityPass = document.querySelector('.community-pass');
+      if (communityPass) {
+        var kicker = communityPass.querySelector('.community-kicker');
+        if (kicker) {
+          kicker.textContent = isUk ? 'СПІЛЬНОТА В TELEGRAM' : (isEn ? 'TELEGRAM COMMUNITY' : 'СООБЩЕСТВО В TELEGRAM');
+        }
+        var price = communityPass.querySelector('.community-price');
+        if (price) {
+          if (isUk) {
+            price.innerHTML = 'Безкоштовно <span>у Telegram</span>';
+          } else if (isEn) {
+            price.innerHTML = 'Free <span>on Telegram</span>';
+          } else {
+            price.innerHTML = 'Бесплатно <span>в Telegram</span>';
+          }
+        }
+        var desc = communityPass.querySelector('p:not(.community-pass-note)');
+        if (desc) {
+          if (isUk) {
+            desc.innerHTML = 'Вільний доступ. Матеріали,<br/>уроки та спілкування в нашому Telegram-каналі.';
+          } else if (isEn) {
+            desc.innerHTML = 'Free access. Guides,<br/>video lessons, and creator chat in our Telegram channel.';
+          } else {
+            desc.innerHTML = 'Бесплатный доступ. Материалы,<br/>уроки и общение в нашем Telegram-канале.';
+          }
+        }
+        var btn = communityPass.querySelector('a.button');
+        if (btn) {
+          btn.setAttribute('href', 'https://t.me/+e1X953uUhg5hMDAy');
+          var btnText = isUk ? 'Приєднатися до каналу' : (isEn ? 'Join the channel' : 'Присоединиться к каналу');
+          btn.innerHTML = btnText + ' <svg aria-hidden="true" class="lucide lucide-arrow-up-right" fill="none" height="18" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg"><path d="M7 7h10v10"></path><path d="M7 17 17 7"></path></svg>';
+        }
+        var note = communityPass.querySelector('.community-pass-note');
+        if (note) {
+          note.textContent = isUk ? '100% безкоштовно для підписників' : (isEn ? '100% free for subscribers' : '100% бесплатно для подписчиков');
+        }
+      }
+
+      // 3. Item 01 in community program
+      var item1 = document.querySelector('.community-item:first-child');
+      if (item1) {
+        var tSpan = item1.querySelector('.community-item-title > span:last-child');
+        if (tSpan) {
+          if (isUk) {
+            tSpan.innerHTML = 'Канал і чат у Telegram<small>Спілкування</small>';
+          } else if (isEn) {
+            tSpan.innerHTML = 'Telegram channel & chat<small>Community</small>';
+          } else {
+            tSpan.innerHTML = 'Канал и чат в Telegram<small>Общение</small>';
+          }
+        }
+      }
+    }
+
+    update();
+    var interval = setInterval(update, 300);
+    setTimeout(function() { clearInterval(interval); }, 4000);
   }
 
   if (document.readyState === 'loading') {
