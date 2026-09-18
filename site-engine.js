@@ -3,6 +3,9 @@
   'use strict';
 
   function init() {
+    initActivationChecker();
+    initConsultationCallAndOptions();
+    initContactFloatingButton();
     initTheme();
     initHeroPhoneScreens();
     initRewardsCalculator();
@@ -862,11 +865,11 @@
         var price = communityPass.querySelector('.community-price');
         if (price) {
           if (isUk) {
-            price.innerHTML = 'Безкоштовно <span>у Telegram</span>';
+            price.innerHTML = 'Безкоштовно';
           } else if (isEn) {
-            price.innerHTML = 'Free <span>on Telegram</span>';
+            price.innerHTML = 'Free';
           } else {
-            price.innerHTML = 'Бесплатно <span>в Telegram</span>';
+            price.innerHTML = 'Бесплатно';
           }
         }
         var desc = communityPass.querySelector('p:not(.community-pass-note)');
@@ -910,6 +913,320 @@
     update();
     var interval = setInterval(update, 300);
     setTimeout(function() { clearInterval(interval); }, 4000);
+  }
+
+  
+  // ==========================================
+  // 10. ACTIVATION REGION & FOLLOWERS CHECKER
+  // ==========================================
+  function initActivationChecker() {
+    var trigger = document.getElementById('activation-region');
+    var followersInput = document.getElementById('activation-followers');
+    var resultEl = document.querySelector('.activation-check-result');
+    var container = document.querySelector('.activation-checker');
+    if (!trigger && !container) return;
+
+    var lang = document.documentElement.lang || 'ru';
+    var isUk = lang === 'uk' || window.location.pathname.includes('uk') || window.location.pathname.includes('_1');
+    var isEn = lang === 'en' || window.location.pathname.includes('en') || window.location.pathname.includes('_2');
+
+    var regions = [
+      { id: 'fr', flag: '🇫🇷', name: isUk ? 'Франція' : (isEn ? 'France' : 'Франция') },
+      { id: 'de', flag: '🇩🇪', name: isUk ? 'Німеччина' : (isEn ? 'Germany' : 'Германия') },
+      { id: 'gb', flag: '🇬🇧', name: isUk ? 'Британія' : (isEn ? 'United Kingdom' : 'Великобритания') },
+      { id: 'us', flag: '🇺🇸', name: isUk ? 'США' : (isEn ? 'USA' : 'США') },
+      { id: 'kr', flag: '🇰🇷', name: isUk ? 'Південна Корея' : (isEn ? 'South Korea' : 'Южная Корея') },
+      { id: 'other', flag: '🌐', name: isUk ? 'Інший регіон' : (isEn ? 'Other region' : 'Другой регион') }
+    ];
+
+    var currentRegion = 'fr';
+
+    // Ensure trigger button has styling & wrapper has position relative
+    if (trigger) {
+      trigger.style.cursor = 'pointer';
+      var parent = trigger.parentElement;
+      if (parent) {
+        parent.style.position = 'relative';
+      }
+
+      var valueSpan = trigger.querySelector('[data-slot="select-value"]');
+      if (valueSpan && (!valueSpan.textContent || !valueSpan.textContent.trim())) {
+        valueSpan.textContent = '🇫🇷 ' + (isUk ? 'Франція' : (isEn ? 'France' : 'Франция'));
+      }
+
+      // Create popover menu
+      var popover = document.createElement('div');
+      popover.className = 'satori-region-popover';
+      popover.style.display = 'none';
+      popover.style.position = 'absolute';
+      popover.style.top = 'calc(100% + 6px)';
+      popover.style.left = '0';
+      popover.style.width = '240px';
+      popover.style.background = 'var(--popover, #18181b)';
+      popover.style.color = 'var(--popover-foreground, #fafafa)';
+      popover.style.border = '1px solid rgba(255,255,255,0.15)';
+      popover.style.borderRadius = '8px';
+      popover.style.padding = '6px';
+      popover.style.boxShadow = '0 12px 30px rgba(0,0,0,0.5)';
+      popover.style.zIndex = '99999';
+
+      regions.forEach(function(reg) {
+        var opt = document.createElement('button');
+        opt.type = 'button';
+        opt.style.display = 'flex';
+        opt.style.alignItems = 'center';
+        opt.style.gap = '8px';
+        opt.style.width = '100%';
+        opt.style.padding = '8px 10px';
+        opt.style.border = 'none';
+        opt.style.background = 'transparent';
+        opt.style.color = 'inherit';
+        opt.style.fontSize = '14px';
+        opt.style.borderRadius = '6px';
+        opt.style.cursor = 'pointer';
+        opt.style.textAlign = 'left';
+        opt.innerHTML = '<span style="font-size:16px;">' + reg.flag + '</span> <span>' + reg.name + '</span>';
+
+        opt.onmouseenter = function() { opt.style.background = 'rgba(255,255,255,0.08)'; };
+        opt.onmouseleave = function() { opt.style.background = 'transparent'; };
+
+        opt.onclick = function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          currentRegion = reg.id;
+          if (valueSpan) {
+            valueSpan.textContent = reg.flag + ' ' + reg.name;
+          }
+          popover.style.display = 'none';
+          trigger.setAttribute('data-state', 'closed');
+          trigger.setAttribute('aria-expanded', 'false');
+          validate();
+        };
+
+        popover.appendChild(opt);
+      });
+
+      if (parent) {
+        parent.appendChild(popover);
+      }
+
+      trigger.onclick = function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var isOpen = popover.style.display === 'block';
+        popover.style.display = isOpen ? 'none' : 'block';
+        trigger.setAttribute('data-state', isOpen ? 'closed' : 'open');
+        trigger.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+      };
+
+      document.addEventListener('click', function(e) {
+        if (!trigger.contains(e.target) && !popover.contains(e.target)) {
+          popover.style.display = 'none';
+          trigger.setAttribute('data-state', 'closed');
+          trigger.setAttribute('aria-expanded', 'false');
+        }
+      });
+    }
+
+    function validate() {
+      var count = followersInput ? (parseInt(followersInput.value, 10) || 0) : 1500;
+      var isValidRegion = currentRegion !== 'other';
+      var hasFollowers = count > 1000;
+      var isReady = isValidRegion && hasFollowers;
+
+      if (resultEl) {
+        if (isReady) {
+          resultEl.className = 'activation-check-result';
+          resultEl.textContent = isUk
+            ? 'Можна звернутися по попередню перевірку акаунта. Підключення залежить від виконання умов програми.'
+            : (isEn ? 'You can apply for a preliminary account check. Activation depends on meeting program requirements.'
+            : 'Можно обратиться за предварительной проверкой аккаунта. Подключение зависит от выполнения условий программы.');
+        } else {
+          resultEl.className = 'activation-check-result not-ready';
+          if (!isValidRegion) {
+            resultEl.textContent = isUk
+              ? 'Послуга доступна для акаунтів п’яти зазначених регіонів.'
+              : (isEn ? 'The service is available for accounts from the five listed regions.'
+              : 'Услуга доступна для аккаунтов пяти указанных регионов.');
+          } else {
+            resultEl.textContent = isUk
+              ? 'Для звернення по цю послугу потрібно понад 1 000 підписників.'
+              : (isEn ? 'To apply for this service, you need over 1,000 followers.'
+              : 'Для обращения по этой услуге требуется более 1 000 подписчиков.');
+          }
+        }
+      }
+    }
+
+    if (followersInput) {
+      followersInput.addEventListener('input', validate);
+      followersInput.addEventListener('change', validate);
+    }
+    validate();
+  }
+
+  // ==========================================
+  // 11. CONSULTATION CALL DEMO & DURATION TOGGLE
+  // ==========================================
+  function initConsultationCallAndOptions() {
+    var lang = document.documentElement.lang || 'ru';
+    var isUk = lang === 'uk' || window.location.pathname.includes('uk') || window.location.pathname.includes('_1');
+    var isEn = lang === 'en' || window.location.pathname.includes('en') || window.location.pathname.includes('_2');
+
+    // --- A. CALL DEMO ---
+    var callCard = document.querySelector('.call-card');
+    if (callCard) {
+      var audio = callCard.querySelector('audio');
+      var btnAccept = callCard.querySelector('.call-accept');
+      var btnDecline = callCard.querySelector('.call-decline');
+      var callStatus = callCard.querySelector('.call-status');
+      var callTimer = null;
+      var callSeconds = 0;
+
+      function formatTime(s) {
+        var m = Math.floor(s / 60);
+        var sec = s % 60;
+        return (m < 10 ? '0' + m : m) + ':' + (sec < 10 ? '0' + sec : sec);
+      }
+
+      function stopCall() {
+        if (callTimer) clearInterval(callTimer);
+        callTimer = null;
+        callSeconds = 0;
+        if (audio) {
+          audio.pause();
+          audio.currentTime = 0;
+        }
+        if (callStatus) {
+          callStatus.textContent = isUk ? 'Вхідний дзвінок…' : (isEn ? 'Incoming call…' : 'Входящий звонок…');
+        }
+        callCard.classList.remove('call-active');
+      }
+
+      if (btnAccept) {
+        btnAccept.style.cursor = 'pointer';
+        btnAccept.onclick = function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          stopCall();
+
+          if (audio) {
+            audio.play().catch(function(err) { console.log('Audio autoplay prevented:', err); });
+          }
+          callCard.classList.add('call-active');
+          callSeconds = 0;
+          if (callStatus) {
+            var prefix = isUk ? 'Дзвінок триває… ' : (isEn ? 'Call in progress… ' : 'Звонок идёт… ');
+            callStatus.textContent = prefix + formatTime(callSeconds);
+          }
+
+          callTimer = setInterval(function() {
+            callSeconds++;
+            if (callStatus) {
+              var prefix = isUk ? 'Дзвінок триває… ' : (isEn ? 'Call in progress… ' : 'Звонок идёт… ');
+              callStatus.textContent = prefix + formatTime(callSeconds);
+            }
+          }, 1000);
+        };
+      }
+
+      if (btnDecline) {
+        btnDecline.style.cursor = 'pointer';
+        btnDecline.onclick = function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          stopCall();
+        };
+      }
+
+      if (audio) {
+        audio.onended = function() {
+          if (callTimer) clearInterval(callTimer);
+          callTimer = null;
+          if (callStatus) {
+            callStatus.textContent = isUk ? 'Дзвінок завершено' : (isEn ? 'Call ended' : 'Звонок завершён');
+          }
+          callCard.classList.remove('call-active');
+          setTimeout(function() {
+            if (callStatus && !callTimer) {
+              callStatus.textContent = isUk ? 'Вхідний дзвінок…' : (isEn ? 'Incoming call…' : 'Входящий звонок…');
+            }
+          }, 3000);
+        };
+      }
+    }
+
+    // --- B. DURATION TOGGLE (30 min vs 60 min) ---
+    var options = document.querySelectorAll('.consultation-option');
+    var ctaButton = document.querySelector('.consultation-copy a.button') || document.querySelector('a[href*="t.me"][href*="Записа"]');
+
+    if (options.length >= 2) {
+      options.forEach(function(opt, idx) {
+        opt.style.cursor = 'pointer';
+        opt.onclick = function(e) {
+          e.preventDefault();
+          options.forEach(function(o) {
+            o.classList.remove('is-selected');
+            var btn = o.querySelector('[data-slot="radio-group-item"]');
+            if (btn) {
+              btn.setAttribute('data-state', 'unchecked');
+              btn.setAttribute('aria-checked', 'false');
+              var ind = btn.querySelector('[data-slot="radio-group-indicator"]');
+              if (ind) ind.style.display = 'none';
+            }
+          });
+
+          opt.classList.add('is-selected');
+          var radioBtn = opt.querySelector('[data-slot="radio-group-item"]');
+          if (radioBtn) {
+            radioBtn.setAttribute('data-state', 'checked');
+            radioBtn.setAttribute('aria-checked', 'true');
+            var ind = radioBtn.querySelector('[data-slot="radio-group-indicator"]');
+            if (ind) ind.style.display = 'flex';
+          }
+
+          var is60 = idx === 1;
+          var price = is60 ? '€150' : '€100';
+          if (ctaButton) {
+            var label = isUk ? ('Записатися за ' + price) : (isEn ? ('Book for ' + price) : ('Записаться за ' + price));
+            ctaButton.innerHTML = label + ' <svg aria-hidden="true" class="lucide lucide-arrow-up-right" fill="none" height="18" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg"><path d="M7 7h10v10"></path><path d="M7 17 17 7"></path></svg>';
+            ctaButton.setAttribute('href', 'https://t.me/+e1X953uUhg5hMDAy');
+          }
+        };
+      });
+    }
+  }
+
+  // ==========================================
+  // 12. FLOATING CONTACT BUTTON (Зв'язатися)
+  // ==========================================
+  function initContactFloatingButton() {
+    function setupLaunchers() {
+      var launchers = document.querySelectorAll('.contact-launcher');
+      launchers.forEach(function(btn) {
+        btn.removeAttribute('inert');
+        btn.setAttribute('aria-hidden', 'false');
+        btn.classList.remove('is-awaiting-phone');
+        btn.style.cursor = 'pointer';
+        btn.style.pointerEvents = 'auto';
+        btn.style.zIndex = '99999';
+        btn.onclick = function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          window.open('https://t.me/+e1X953uUhg5hMDAy', '_blank');
+        };
+      });
+    }
+
+    setupLaunchers();
+    document.addEventListener('click', function(e) {
+      var launcher = e.target.closest('.contact-launcher');
+      if (launcher) {
+        e.preventDefault();
+        e.stopPropagation();
+        window.open('https://t.me/+e1X953uUhg5hMDAy', '_blank');
+      }
+    }, true);
   }
 
   if (document.readyState === 'loading') {
