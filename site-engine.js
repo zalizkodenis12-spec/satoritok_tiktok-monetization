@@ -3,6 +3,7 @@
   'use strict';
 
   function init() {
+    initLanguageModal();
     initActivationChecker();
     initConsultationCallAndOptions();
     initContactFloatingButton();
@@ -1227,6 +1228,193 @@
         window.open('https://t.me/+e1X953uUhg5hMDAy', '_blank');
       }
     }, true);
+  }
+
+  
+  // ==========================================
+  // 13. MOBILE & DESKTOP LANGUAGE MODAL & DRAWER SWITCHER
+  // ==========================================
+  function initLanguageModal() {
+    function getPageTargets() {
+      var pathName = window.location.pathname;
+      var filename = pathName.split('/').pop() || 'index.html';
+      var base = filename.replace(/\.html$/i, '');
+      
+      var pageKey = 'index';
+      if (base === 'uk' || base === 'en' || base === 'index' || base === '') {
+        pageKey = 'index';
+      } else if (base.endsWith('_1')) {
+        pageKey = base.slice(0, -2);
+      } else if (base.endsWith('_2')) {
+        pageKey = base.slice(0, -2);
+      } else {
+        pageKey = base;
+      }
+
+      var ruUrl = pageKey === 'index' ? 'index.html' : pageKey + '.html';
+      var ukUrl = pageKey === 'index' ? 'uk.html' : pageKey + '_1.html';
+      var enUrl = pageKey === 'index' ? 'en.html' : pageKey + '_2.html';
+
+      return { ru: ruUrl, uk: ukUrl, en: enUrl };
+    }
+
+    var lang = document.documentElement.lang || 'ru';
+    var isUk = lang === 'uk' || window.location.pathname.includes('uk') || window.location.pathname.includes('_1');
+    var isEn = lang === 'en' || window.location.pathname.includes('en') || window.location.pathname.includes('_2');
+    var currentCode = isUk ? 'uk' : (isEn ? 'en' : 'ru');
+    var targets = getPageTargets();
+
+    var modalId = 'satori-lang-modal-root';
+    var existing = document.getElementById(modalId);
+    if (existing) existing.remove();
+
+    var overlay = document.createElement('div');
+    overlay.id = modalId;
+    overlay.style.position = 'fixed';
+    overlay.style.inset = '0';
+    overlay.style.zIndex = '99999999';
+    overlay.style.display = 'none';
+    overlay.style.alignItems = 'center';
+    overlay.style.justifyContent = 'center';
+    overlay.style.background = 'rgba(0, 0, 0, 0.78)';
+    overlay.style.backdropFilter = 'blur(10px)';
+    overlay.style.WebkitBackdropFilter = 'blur(10px)';
+    overlay.style.padding = '16px';
+    overlay.style.opacity = '0';
+    overlay.style.transition = 'opacity 0.2s ease-in-out';
+
+    var modal = document.createElement('div');
+    modal.style.background = 'var(--background, #09090b)';
+    modal.style.color = 'var(--foreground, #fafafa)';
+    modal.style.border = '1px solid rgba(255, 255, 255, 0.16)';
+    modal.style.borderRadius = '20px';
+    modal.style.width = '100%';
+    modal.style.maxWidth = '360px';
+    modal.style.boxShadow = '0 24px 48px rgba(0, 0, 0, 0.7)';
+    modal.style.padding = '22px';
+    modal.style.transform = 'scale(0.94)';
+    modal.style.transition = 'transform 0.2s ease-in-out';
+
+    var titleText = isUk ? 'Виберіть мову' : (isEn ? 'Select language' : 'Выберите язык');
+
+    modal.innerHTML = [
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">',
+        '<div style="display:flex;align-items:center;gap:10px;">',
+          '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#10b981;"><path d="m5 8 6 6"></path><path d="m4 14 6-6 2-3"></path><path d="M2 5h12"></path><path d="M7 2h1"></path><path d="m22 22-5-10-5 10"></path><path d="M14 18h6"></path></svg>',
+          '<span style="font-weight:700;font-size:17px;letter-spacing:-0.2px;">' + titleText + '</span>',
+        '</div>',
+        '<button id="satori-lang-modal-close" type="button" aria-label="Закрити" style="background:rgba(255,255,255,0.08);border:none;color:inherit;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;">✕</button>',
+      '</div>',
+      '<div style="display:flex;flex-direction:column;gap:10px;">',
+        '<a href="' + targets.uk + '" style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:12px;text-decoration:none;color:inherit;border:1px solid ' + (currentCode === 'uk' ? '#10b981' : 'rgba(255,255,255,0.12)') + ';background:' + (currentCode === 'uk' ? 'rgba(16,185,129,0.12)' : 'rgba(255,255,255,0.04)') + ';transition:all 0.15s;">',
+          '<div style="display:flex;align-items:center;gap:12px;">',
+            '<span style="font-size:24px;">🇺🇦</span>',
+            '<div style="text-align:left;">',
+              '<div style="font-weight:600;font-size:15px;">Українська</div>',
+              '<div style="font-size:12px;opacity:0.6;">Українська версія</div>',
+            '</div>',
+          '</div>',
+          (currentCode === 'uk' ? '<span style="color:#10b981;font-weight:700;font-size:18px;">✓</span>' : '<span style="font-size:12px;opacity:0.5;font-weight:600;">UK</span>'),
+        '</a>',
+        '<a href="' + targets.ru + '" style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:12px;text-decoration:none;color:inherit;border:1px solid ' + (currentCode === 'ru' ? '#10b981' : 'rgba(255,255,255,0.12)') + ';background:' + (currentCode === 'ru' ? 'rgba(16,185,129,0.12)' : 'rgba(255,255,255,0.04)') + ';transition:all 0.15s;">',
+          '<div style="display:flex;align-items:center;gap:12px;">',
+            '<span style="font-size:24px;">🇷🇺</span>',
+            '<div style="text-align:left;">',
+              '<div style="font-weight:600;font-size:15px;">Русский</div>',
+              '<div style="font-size:12px;opacity:0.6;">Русскоязычная версия</div>',
+            '</div>',
+          '</div>',
+          (currentCode === 'ru' ? '<span style="color:#10b981;font-weight:700;font-size:18px;">✓</span>' : '<span style="font-size:12px;opacity:0.5;font-weight:600;">RU</span>'),
+        '</a>',
+        '<a href="' + targets.en + '" style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:12px;text-decoration:none;color:inherit;border:1px solid ' + (currentCode === 'en' ? '#10b981' : 'rgba(255,255,255,0.12)') + ';background:' + (currentCode === 'en' ? 'rgba(16,185,129,0.12)' : 'rgba(255,255,255,0.04)') + ';transition:all 0.15s;">',
+          '<div style="display:flex;align-items:center;gap:12px;">',
+            '<span style="font-size:24px;">🇬🇧</span>',
+            '<div style="text-align:left;">',
+              '<div style="font-weight:600;font-size:15px;">English</div>',
+              '<div style="font-size:12px;opacity:0.6;">English version</div>',
+            '</div>',
+          '</div>',
+          (currentCode === 'en' ? '<span style="color:#10b981;font-weight:700;font-size:18px;">✓</span>' : '<span style="font-size:12px;opacity:0.5;font-weight:600;">EN</span>'),
+        '</a>',
+      '</div>'
+    ].join('');
+
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+
+    function openModal() {
+      overlay.style.display = 'flex';
+      requestAnimationFrame(function() {
+        overlay.style.opacity = '1';
+        modal.style.transform = 'scale(1)';
+      });
+    }
+
+    function closeModal() {
+      overlay.style.opacity = '0';
+      modal.style.transform = 'scale(0.94)';
+      setTimeout(function() {
+        overlay.style.display = 'none';
+      }, 200);
+    }
+
+    var closeBtn = document.getElementById('satori-lang-modal-close');
+    if (closeBtn) closeBtn.onclick = closeModal;
+
+    overlay.onclick = function(e) {
+      if (e.target === overlay) closeModal();
+    };
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeModal();
+    });
+
+    // Attach to all language toggle buttons
+    function attachTriggers() {
+      var triggers = document.querySelectorAll('.language-toggle, button[aria-label*="мова"], button[aria-label*="Мова"], button[aria-label*="язык"], button[aria-label*="Язык"], button[aria-label*="language"], button[aria-label*="Language"], button[title*="Мова"], button[title*="мова"], button[title*="Язык"], button[title*="язык"], button[title*="Language"], button[title*="language"]');
+      triggers.forEach(function(btn) {
+        btn.style.cursor = 'pointer';
+        btn.onclick = function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          openModal();
+        };
+      });
+    }
+
+    attachTriggers();
+
+    // Delegated click
+    document.addEventListener('click', function(e) {
+      var btn = e.target.closest('.language-toggle');
+      if (btn) {
+        e.preventDefault();
+        e.stopPropagation();
+        openModal();
+      }
+    });
+
+    // Also add clear language switcher to inside of mobile-nav
+    var mobileNav = document.getElementById('mobile-nav') || document.querySelector('.mobile-nav');
+    if (mobileNav && !mobileNav.querySelector('.mobile-lang-drawer-row')) {
+      var drawerItems = mobileNav.querySelector('.mobile-nav-items') || mobileNav;
+      var row = document.createElement('div');
+      row.className = 'mobile-lang-drawer-row';
+      row.style.display = 'flex';
+      row.style.alignItems = 'center';
+      row.style.justifyContent = 'center';
+      row.style.gap = '8px';
+      row.style.padding = '16px';
+      row.style.marginTop = '12px';
+      row.style.borderTop = '1px solid rgba(255,255,255,0.1)';
+      row.innerHTML = [
+        '<span style="font-size:13px;opacity:0.7;margin-right:4px;">' + (isUk ? 'Мова:' : (isEn ? 'Lang:' : 'Язык:')) + '</span>',
+        '<a href="' + targets.uk + '" style="padding:6px 14px;border-radius:8px;text-decoration:none;font-weight:600;font-size:13px;background:' + (currentCode === 'uk' ? '#10b981' : 'rgba(255,255,255,0.08)') + ';color:' + (currentCode === 'uk' ? '#fff' : 'inherit') + ';">UK</a>',
+        '<a href="' + targets.ru + '" style="padding:6px 14px;border-radius:8px;text-decoration:none;font-weight:600;font-size:13px;background:' + (currentCode === 'ru' ? '#10b981' : 'rgba(255,255,255,0.08)') + ';color:' + (currentCode === 'ru' ? '#fff' : 'inherit') + ';">RU</a>',
+        '<a href="' + targets.en + '" style="padding:6px 14px;border-radius:8px;text-decoration:none;font-weight:600;font-size:13px;background:' + (currentCode === 'en' ? '#10b981' : 'rgba(255,255,255,0.08)') + ';color:' + (currentCode === 'en' ? '#fff' : 'inherit') + ';">EN</a>'
+      ].join('');
+      drawerItems.appendChild(row);
+    }
   }
 
   if (document.readyState === 'loading') {
