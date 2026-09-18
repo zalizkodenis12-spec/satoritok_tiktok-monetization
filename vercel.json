@@ -1,0 +1,122 @@
+{
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "rewrites": [
+    {
+      "source": "/uk",
+      "destination": "/uk.html"
+    },
+    {
+      "source": "/en",
+      "destination": "/en.html"
+    },
+    {
+      "source": "/services",
+      "destination": "/services.html"
+    },
+    {
+      "source": "/uk/services",
+      "destination": "/services_1.html"
+    },
+    {
+      "source": "/en/services",
+      "destination": "/services_2.html"
+    },
+    {
+      "source": "/how-it-works",
+      "destination": "/how-it-works.html"
+    },
+    {
+      "source": "/uk/how-it-works",
+      "destination": "/how-it-works_1.html"
+    },
+    {
+      "source": "/en/how-it-works",
+      "destination": "/how-it-works_2.html"
+    },
+    {
+      "source": "/reviews",
+      "destination": "/reviews.html"
+    },
+    {
+      "source": "/uk/reviews",
+      "destination": "/reviews_1.html"
+    },
+    {
+      "source": "/en/reviews",
+      "destination": "/reviews_2.html"
+    },
+    {
+      "source": "/faq",
+      "destination": "/faq.html"
+    },
+    {
+      "source": "/uk/faq",
+      "destination": "/faq_1.html"
+    },
+    {
+      "source": "/en/faq",
+      "destination": "/faq_2.html"
+    },
+    {
+      "source": "/referral-program",
+      "destination": "/referral-program.html"
+    },
+    {
+      "source": "/uk/referral-program",
+      "destination": "/referral-program_1.html"
+    },
+    {
+      "source": "/en/referral-program",
+      "destination": "/referral-program_2.html"
+    },
+    {
+      "source": "/blog",
+      "destination": "/blog.html"
+    },
+    {
+      "source": "/uk/blog",
+      "destination": "/blog_1.html"
+    },
+    {
+      "source": "/en/blog",
+      "destination": "/blog_2.html"
+    },
+    {
+      "source": "/creator-rewards-program",
+      "destination": "/creator-rewards-program.html"
+    },
+    {
+      "source": "/uk/creator-rewards-program",
+      "destination": "/creator-rewards-program_1.html"
+    },
+    {
+      "source": "/en/creator-rewards-program",
+      "destination": "/creator-rewards-program_2.html"
+    },
+    {
+      "source": "/privacy-policy",
+      "destination": "/privacy-policy.html"
+    },
+    {
+      "source": "/uk/privacy-policy",
+      "destination": "/privacy-policy_1.html"
+    },
+    {
+      "source": "/en/privacy-policy",
+      "destination": "/privacy-policy_2.html"
+    },
+    {
+      "source": "/delivery-cancellation-returns",
+      "destination": "/delivery-cancellation-returns.html"
+    },
+    {
+      "source": "/uk/delivery-cancellation-returns",
+      "destination": "/delivery-cancellation-returns_1.html"
+    },
+    {
+      "source": "/en/delivery-cancellation-returns",
+      "destination": "/delivery-cancellation-returns_2.html"
+    }
+  ]
+}
