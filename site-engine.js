@@ -17,19 +17,23 @@
   // 1. THEME SWITCHER (Dark <-> Light Mode)
   // ==========================================
   function initTheme() {
-    var savedTheme = localStorage.getItem('satori_theme') || 'dark';
+    var savedTheme = document.documentElement.getAttribute('data-theme') || document.documentElement.dataset.theme || localStorage.getItem('vlad-theme') || localStorage.getItem('satori_theme') || 'dark';
     applyTheme(savedTheme);
 
-    var themeButtons = document.querySelectorAll('.theme-toggle:not(.language-toggle), button[aria-label*="тем"], button[aria-label*="Тем"], button[aria-label*="світл"], button[aria-label*="свет"], button[title*="тем"], button[title*="Тем"]');
+    var themeButtons = document.querySelectorAll('.theme-toggle:not(.language-toggle), button[aria-label*="тем"], button[aria-label*="Тем"], button[aria-label*="світл"], button[aria-label*="свет"], button[aria-label*="theme"], button[aria-label*="Theme"], button[title*="тем"], button[title*="Тем"], button[title*="theme"], button[title*="Theme"]');
     themeButtons.forEach(function(btn) {
       btn.style.cursor = 'pointer';
       btn.onclick = function(e) {
         e.preventDefault();
         e.stopPropagation();
-        var current = document.documentElement.getAttribute('data-theme') || (document.documentElement.classList.contains('dark') ? 'dark' : 'light');
-        var nextTheme = current === 'dark' ? 'light' : 'dark';
+        var isDark = document.documentElement.classList.contains('dark') || document.documentElement.getAttribute('data-theme') === 'dark';
+        var nextTheme = isDark ? 'light' : 'dark';
         applyTheme(nextTheme);
-        localStorage.setItem('satori_theme', nextTheme);
+        try {
+          localStorage.setItem('vlad-theme', nextTheme);
+          localStorage.setItem('satori_theme', nextTheme);
+          document.cookie = 'vlad-theme=' + nextTheme + '; path=/; max-age=31536000';
+        } catch(err) {}
       };
     });
   }
@@ -37,11 +41,17 @@
   function applyTheme(theme) {
     if (theme === 'dark') {
       document.documentElement.setAttribute('data-theme', 'dark');
+      document.documentElement.dataset.theme = 'dark';
       document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light');
+      document.documentElement.style.colorScheme = 'dark';
       updateAllThemeIcons(true);
     } else {
       document.documentElement.setAttribute('data-theme', 'light');
+      document.documentElement.dataset.theme = 'light';
       document.documentElement.classList.remove('dark');
+      document.documentElement.classList.add('light');
+      document.documentElement.style.colorScheme = 'light';
       updateAllThemeIcons(false);
     }
   }
@@ -52,95 +62,151 @@
       var svg = btn.querySelector('svg');
       if (!svg) return;
       if (isDark) {
-        svg.innerHTML = '<circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path>';
-      } else {
         svg.innerHTML = '<path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"></path>';
+        btn.setAttribute('title', 'Светлая тема');
+        btn.setAttribute('aria-label', 'Светлая тема');
+      } else {
+        svg.innerHTML = '<circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path>';
+        btn.setAttribute('title', 'Тёмная тема');
+        btn.setAttribute('aria-label', 'Тёмная тема');
       }
     });
   }
 
   // ==========================================
-  // 2. HERO PHONE - 5 INTERACTIVE SCREENS
+  // 2. HERO PHONE - AUTHENTIC TIKTOK DEMO
   // ==========================================
   function initHeroPhoneScreens() {
     var phone = document.querySelector('.phone-stage, #phone-demo');
     if (!phone) return;
 
-    var screens = phone.querySelectorAll('.phone-page, [data-phone-screen]');
+    var lang = document.documentElement.lang || 'ru';
+    var isUk = lang === 'uk';
+    var isEn = lang === 'en';
+
     var dots = phone.parentElement.querySelectorAll('.demo-switcher button, .demo-switcher > *');
     var caption = phone.parentElement.querySelector('.demo-caption');
+    var tabs = phone.querySelectorAll('.profile-post-tabs [role="tab"]');
+    var emptyProfile = phone.querySelector('.empty-profile');
+    var emptyP = emptyProfile ? emptyProfile.querySelector('p') : null;
+    var emptySpan = emptyProfile ? emptyProfile.querySelector('span') : null;
+    var pinkBtn = phone.querySelector('.phone-pink');
+    var handleBtn = phone.querySelector('.profile-handle');
+    var studioBtn = phone.querySelector('.studio-link');
+    var bottomNavBtns = phone.querySelectorAll('.phone-bottom-nav button');
+    var demoBtn = document.querySelector('.hero-actions .button-secondary');
 
-    var captionsRu = [
-      '1. Профиль — оформленный аккаунт с живой аудиторией',
-      '2. T studio — инструменты автора и статус монетизации',
+    var captions = isUk ? [
+      '1. Профіль — готовий акаунт TikTok із 11 500 підписниками',
+      '2. T studio — підключена монетизація Creator Rewards Program',
+      '3. Аналітика — кваліфіковані перегляди та розрахунок нагород',
+      '4. Creator Rewards Program — статус профілю перевірений і активний',
+      '5. Баланс нагород — виведення коштів 15-го числа щомісяця'
+    ] : (isEn ? [
+      '1. Profile — verified TikTok account with 11,500 followers',
+      '2. T studio — Creator Rewards Program monetization connected',
+      '3. Analytics — qualified views tracking and estimated rewards',
+      '4. Creator Rewards Program — verified and active creator status',
+      '5. Rewards Balance — regular monthly payouts on the 15th'
+    ] : [
+      '1. Профиль — готовый аккаунт TikTok с 11 500 подписчиками',
+      '2. T studio — подключенная монетизация Creator Rewards Program',
       '3. Analytics — расчет наград за квалифицированные просмотры',
-      '4. Creator Rewards Program — программа активна и приносит доход',
-      '5. Баланс наград — готово к выводу на банковскую карту или PayPal'
-    ];
+      '4. Creator Rewards Program — статус профиля проверен и активен',
+      '5. Баланс наград — вывод средств 15-го числа каждого месяца'
+    ]);
 
-    function showScreen(idx) {
-      screens.forEach(function(s, i) {
-        if (i === idx) {
-          s.style.display = 'block';
-          s.classList.add('active');
-        } else {
-          s.style.display = 'none';
-          s.classList.remove('active');
-        }
+    var tabMessages = isUk ? [
+      { p: 'Тут починається твоя історія', span: 'Опублікуй своє перше відео', btn: 'Завантажити' },
+      { p: 'Приватні відео', span: 'Доступні лише власнику акаунта', btn: 'Керувати' },
+      { p: 'Твої репости', span: 'Відео, якими ти поділився', btn: 'У рекомендації' },
+      { p: 'Збережені відео', span: 'Зберігай ідеї для натхнення', btn: 'У закладки' },
+      { p: 'Вподобані відео', span: 'Твої позначки «Подобається»', btn: 'У тренди' }
+    ] : (isEn ? [
+      { p: 'Your story begins here', span: 'Publish your first video', btn: 'Upload' },
+      { p: 'Private videos', span: 'Only visible to account owner', btn: 'Manage' },
+      { p: 'Your reposts', span: 'Videos you shared', btn: 'Explore' },
+      { p: 'Saved videos', span: 'Save ideas for inspiration', btn: 'Bookmarks' },
+      { p: 'Liked videos', span: 'Videos you liked', btn: 'Trending' }
+    ] : [
+      { p: 'Здесь начинается твоя история', span: 'Опубликуй своё первое видео', btn: 'Загрузить' },
+      { p: 'Приватные видео', span: 'Доступно только владельцу аккаунта', btn: 'Управление' },
+      { p: 'Твои репосты', span: 'Видео, которыми ты поделился', btn: 'В рекомендации' },
+      { p: 'Избранное', span: 'Сохраняй идеи для вдохновения', btn: 'В закладки' },
+      { p: 'Понравившееся', span: 'Твои отметки «Мне нравится»', btn: 'В тренды' }
+    ]);
+
+    function selectTab(idx) {
+      if (idx < 0 || idx >= tabs.length) return;
+      tabs.forEach(function(t, i) {
+        var active = i === idx;
+        t.setAttribute('aria-selected', active ? 'true' : 'false');
+        t.setAttribute('data-state', active ? 'active' : 'inactive');
       });
-      dots.forEach(function(d, i) {
-        d.setAttribute('aria-pressed', i === idx ? 'true' : 'false');
-        if (i === idx) {
-          d.style.backgroundColor = 'var(--cyan)';
-        } else {
-          d.style.backgroundColor = '';
-        }
-      });
-      if (caption && captionsRu[idx]) {
-        caption.textContent = captionsRu[idx];
+      if (tabMessages[idx]) {
+        if (emptyP) emptyP.textContent = tabMessages[idx].p;
+        if (emptySpan) emptySpan.textContent = tabMessages[idx].span;
+        if (pinkBtn) pinkBtn.textContent = tabMessages[idx].btn;
       }
     }
 
-    // Dot clicks
+    tabs.forEach(function(tab, idx) {
+      tab.style.cursor = 'pointer';
+      tab.addEventListener('click', function(e) {
+        e.preventDefault();
+        selectTab(idx);
+      });
+    });
+
+    function selectDemoDot(idx) {
+      dots.forEach(function(d, i) {
+        var active = i === idx;
+        d.setAttribute('aria-pressed', active ? 'true' : 'false');
+        d.style.backgroundColor = active ? 'var(--cyan)' : '';
+      });
+      if (caption && captions[idx]) {
+        caption.textContent = captions[idx];
+      }
+      var floatViews = phone.parentElement.querySelector('.float-views');
+      var floatRewards = phone.parentElement.querySelector('.float-rewards');
+      var floatFollowers = phone.parentElement.querySelector('.float-followers');
+      var floatStatus = phone.parentElement.querySelector('.float-status');
+      
+      [floatViews, floatRewards, floatFollowers, floatStatus].forEach(function(el) {
+        if (el) el.style.boxShadow = '';
+      });
+
+      if (idx === 0 && floatFollowers) {
+        floatFollowers.style.boxShadow = '0 0 20px rgba(37,244,238,0.5)';
+        selectTab(0);
+      } else if (idx === 1 && studioBtn) {
+        studioBtn.style.outline = '2px solid var(--cyan)';
+        setTimeout(function() { studioBtn.style.outline = ''; }, 1200);
+      } else if (idx === 2 && floatViews) {
+        floatViews.style.boxShadow = '0 0 20px rgba(37,244,238,0.6)';
+      } else if (idx === 3 && floatStatus) {
+        floatStatus.style.boxShadow = '0 0 20px rgba(37,244,238,0.6)';
+      } else if (idx === 4 && floatRewards) {
+        floatRewards.style.boxShadow = '0 0 20px rgba(254,44,85,0.6)';
+      }
+    }
+
     dots.forEach(function(dot, idx) {
       dot.style.cursor = 'pointer';
       dot.addEventListener('click', function(e) {
         e.preventDefault();
-        showScreen(idx);
+        selectDemoDot(idx);
       });
     });
 
-    // In-phone buttons that switch screens
-    var studioBtn = phone.querySelector('.phone-btn-studio');
-    if (studioBtn) {
-      studioBtn.addEventListener('click', function() { showScreen(1); });
-    }
-
-    var crpCard = phone.querySelector('.phone-crp-card');
-    if (crpCard) {
-      crpCard.addEventListener('click', function() { showScreen(3); });
-    }
-
-    // Floating badges outside phone (Views & Earnings pills)
-    var floatingViews = phone.parentElement.querySelector('.metric-chip, [class*="badge"], [class*="chip"]');
-    var floatingBadges = phone.parentElement.querySelectorAll('button[class*="metric"], div[class*="chip"], [class*="reward"]');
-    floatingBadges.forEach(function(badge) {
-      badge.style.cursor = 'pointer';
-      badge.addEventListener('click', function() {
-        showScreen(2); // show analytics
-      });
-    });
-
-    // Pink download / order buttons inside phone
-    phone.querySelectorAll('.phone-pink').forEach(function(btn) {
-      btn.style.cursor = 'pointer';
-      btn.addEventListener('click', function(e) {
+    if (pinkBtn) {
+      pinkBtn.style.cursor = 'pointer';
+      pinkBtn.addEventListener('click', function(e) {
         e.preventDefault();
         window.open('https://t.me/satori_tok', '_blank');
       });
-    });
+    }
 
-    var handleBtn = phone.querySelector('.profile-handle');
     if (handleBtn) {
       handleBtn.style.cursor = 'pointer';
       handleBtn.addEventListener('click', function(e) {
@@ -149,8 +215,41 @@
       });
     }
 
-    // Show initial screen 0
-    if (screens.length > 0) showScreen(0);
+    if (studioBtn) {
+      studioBtn.style.cursor = 'pointer';
+      studioBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        selectDemoDot(1);
+      });
+    }
+
+    bottomNavBtns.forEach(function(btn) {
+      btn.style.cursor = 'pointer';
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        bottomNavBtns.forEach(function(b) { b.classList.remove('selected'); });
+        btn.classList.add('selected');
+      });
+    });
+
+    if (demoBtn) {
+      var currentDemoIndex = 0;
+      demoBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        currentDemoIndex = (currentDemoIndex + 1) % (dots.length || 1);
+        selectDemoDot(currentDemoIndex);
+      });
+    }
+
+    phone.parentElement.querySelectorAll('.floating-stat').forEach(function(stat) {
+      stat.style.cursor = 'pointer';
+      stat.addEventListener('click', function() {
+        if (stat.classList.contains('float-views')) selectDemoDot(2);
+        else if (stat.classList.contains('float-rewards')) selectDemoDot(4);
+        else if (stat.classList.contains('float-followers')) selectDemoDot(0);
+        else if (stat.classList.contains('float-status')) selectDemoDot(3);
+      });
+    });
   }
 
   // ==========================================
@@ -642,13 +741,34 @@
     var isEn = path.includes('en') || path.includes('_2') || document.documentElement.lang === 'en';
     var homeUrl = isUk ? 'uk.html' : (isEn ? 'en.html' : 'index.html');
 
+    // Fix brand, home, and back-to-home navigation
     document.querySelectorAll('a, button').forEach(function(el) {
       var txt = (el.textContent || '').trim().toLowerCase();
-      if (txt.includes('на главную') || txt.includes('на головну') || txt.includes('back to home')) {
-        el.setAttribute('href', homeUrl);
+      var aria = (el.getAttribute('aria-label') || '').toLowerCase();
+      var isBrand = el.classList.contains('brand');
+      var isBackHome = el.classList.contains('back-home');
+      var isHomeText = (
+        txt === 'главная' || txt === 'головна' || txt === 'home' ||
+        txt.includes('на главную') || txt.includes('на головну') || txt.includes('back to home') ||
+        aria.includes('главная') || aria.includes('головна') || aria.includes('home')
+      );
+
+      if (isBrand || isBackHome || isHomeText) {
+        var href = el.getAttribute('href');
+        if (el.tagName.toLowerCase() === 'a') {
+          if (!href || href === '#' || href === '/' || href === 'index.html' || href === 'uk.html' || href === 'en.html') {
+            el.setAttribute('href', homeUrl);
+          }
+        }
         el.onclick = function(e) {
-          e.preventDefault();
-          window.location.href = homeUrl;
+          var currentFile = window.location.pathname.split('/').pop() || 'index.html';
+          if (currentFile === homeUrl || (currentFile === '' && homeUrl === 'index.html')) {
+            e.preventDefault();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          } else {
+            e.preventDefault();
+            window.location.href = homeUrl;
+          }
         };
       }
     });
@@ -683,15 +803,32 @@
   // 8. MOBILE MENU
   // ==========================================
   function initMobileMenu() {
-    var menuBtn = document.querySelector('button[aria-label*="меню"], button[aria-label*="menu"], .mobile-toggle, .menu-toggle');
-    var nav = document.querySelector('.site-nav, .mobile-menu, [data-mobile-menu]');
+    var menuBtn = document.querySelector('.mobile-toggle, button[aria-label*="меню"], button[aria-label*="menu"]');
+    var nav = document.getElementById('mobile-nav') || document.querySelector('.mobile-nav');
     if (menuBtn && nav) {
+      menuBtn.style.cursor = 'pointer';
       menuBtn.onclick = function(e) {
         e.preventDefault();
-        nav.classList.toggle('open');
-        var isOpen = nav.classList.contains('open');
+        e.stopPropagation();
+        var isOpen = nav.classList.toggle('is-open');
         menuBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        nav.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+        if (isOpen) {
+          nav.removeAttribute('inert');
+        } else {
+          nav.setAttribute('inert', '');
+        }
       };
+
+      // Close menu on navigation click
+      nav.querySelectorAll('a').forEach(function(link) {
+        link.addEventListener('click', function() {
+          nav.classList.remove('is-open');
+          nav.setAttribute('aria-hidden', 'true');
+          nav.setAttribute('inert', '');
+          menuBtn.setAttribute('aria-expanded', 'false');
+        });
+      });
     }
   }
 
