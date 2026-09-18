@@ -1,17 +1,16 @@
-// Satoritok Complete Interactive Engine v3.0
+// Satoritok Complete Interactive Engine v4.0
 (function() {
   'use strict';
 
   function init() {
     initTheme();
+    initHeroPhoneScreens();
     initRewardsCalculator();
     initConfigurator();
     initServicesPhones();
-    initHeroPhone();
     initAccordions();
     initNavigationAndLinks();
     initMobileMenu();
-    initAudioPlayers();
   }
 
   // ==========================================
@@ -61,22 +60,112 @@
   }
 
   // ==========================================
-  // 2. REWARDS CALCULATOR & SCENARIOS (Screenshot 1)
+  // 2. HERO PHONE - 5 INTERACTIVE SCREENS
+  // ==========================================
+  function initHeroPhoneScreens() {
+    var phone = document.querySelector('.phone-stage, #phone-demo');
+    if (!phone) return;
+
+    var screens = phone.querySelectorAll('.phone-page, [data-phone-screen]');
+    var dots = phone.parentElement.querySelectorAll('.demo-switcher button, .demo-switcher > *');
+    var caption = phone.parentElement.querySelector('.demo-caption');
+
+    var captionsRu = [
+      '1. Профиль — оформленный аккаунт с живой аудиторией',
+      '2. T studio — инструменты автора и статус монетизации',
+      '3. Analytics — расчет наград за квалифицированные просмотры',
+      '4. Creator Rewards Program — программа активна и приносит доход',
+      '5. Баланс наград — готово к выводу на банковскую карту или PayPal'
+    ];
+
+    function showScreen(idx) {
+      screens.forEach(function(s, i) {
+        if (i === idx) {
+          s.style.display = 'block';
+          s.classList.add('active');
+        } else {
+          s.style.display = 'none';
+          s.classList.remove('active');
+        }
+      });
+      dots.forEach(function(d, i) {
+        d.setAttribute('aria-pressed', i === idx ? 'true' : 'false');
+        if (i === idx) {
+          d.style.backgroundColor = 'var(--cyan)';
+        } else {
+          d.style.backgroundColor = '';
+        }
+      });
+      if (caption && captionsRu[idx]) {
+        caption.textContent = captionsRu[idx];
+      }
+    }
+
+    // Dot clicks
+    dots.forEach(function(dot, idx) {
+      dot.style.cursor = 'pointer';
+      dot.addEventListener('click', function(e) {
+        e.preventDefault();
+        showScreen(idx);
+      });
+    });
+
+    // In-phone buttons that switch screens
+    var studioBtn = phone.querySelector('.phone-btn-studio');
+    if (studioBtn) {
+      studioBtn.addEventListener('click', function() { showScreen(1); });
+    }
+
+    var crpCard = phone.querySelector('.phone-crp-card');
+    if (crpCard) {
+      crpCard.addEventListener('click', function() { showScreen(3); });
+    }
+
+    // Floating badges outside phone (Views & Earnings pills)
+    var floatingViews = phone.parentElement.querySelector('.metric-chip, [class*="badge"], [class*="chip"]');
+    var floatingBadges = phone.parentElement.querySelectorAll('button[class*="metric"], div[class*="chip"], [class*="reward"]');
+    floatingBadges.forEach(function(badge) {
+      badge.style.cursor = 'pointer';
+      badge.addEventListener('click', function() {
+        showScreen(2); // show analytics
+      });
+    });
+
+    // Pink download / order buttons inside phone
+    phone.querySelectorAll('.phone-pink').forEach(function(btn) {
+      btn.style.cursor = 'pointer';
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        window.open('https://t.me/satori_tok', '_blank');
+      });
+    });
+
+    var handleBtn = phone.querySelector('.profile-handle');
+    if (handleBtn) {
+      handleBtn.style.cursor = 'pointer';
+      handleBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        window.open('https://t.me/satori_tok', '_blank');
+      });
+    }
+
+    // Show initial screen 0
+    if (screens.length > 0) showScreen(0);
+  }
+
+  // ==========================================
+  // 3. REWARDS CALCULATOR & SCENARIOS
   // ==========================================
   function initRewardsCalculator() {
     var calc = document.querySelector('.calculator');
     if (!calc) return;
 
     var amountDisplay = calc.querySelector('.calc-amount');
-    var viewsDisplay = calc.querySelector('.calc-settings .text-right, .calc-settings [class*="font-semibold"], .calc-settings span:first-child + span');
     var slider = calc.querySelector('.view-slider, [data-slot="slider"]');
     var scenarioButtons = calc.querySelectorAll('.scenario, button.scenario');
     var bars = calc.querySelectorAll('.monthly-bar');
 
-    var currentViews = 100000;
-    var baseRewards = 400;
-
-    function setAmount(amount, viewsText, percent) {
+    function setAmount(amount, percent) {
       if (amountDisplay) {
         var isUk = document.documentElement.lang === 'uk';
         var suffix = isUk ? ' / міс' : ' / мес';
@@ -88,10 +177,9 @@
         if (range && percent !== undefined) range.style.right = ((1 - percent) * 100) + '%';
         if (thumb && percent !== undefined) thumb.parentElement.style.left = (percent * 100) + '%';
       }
-      // Update bars animation/height proportionally
       if (bars.length > 0) {
         var multiplier = amount / 400;
-        bars.forEach(function(bar, i) {
+        bars.forEach(function(bar) {
           var originalH = parseFloat(bar.getAttribute('data-orig-h') || bar.style.height || '2%');
           if (!bar.getAttribute('data-orig-h')) bar.setAttribute('data-orig-h', originalH);
           bar.style.height = Math.min(95, Math.max(5, originalH * multiplier)) + '%';
@@ -99,29 +187,23 @@
       }
     }
 
-    // Scenario buttons (Осторожный, Средний, Высокий)
     scenarioButtons.forEach(function(btn, idx) {
       btn.style.cursor = 'pointer';
       btn.addEventListener('click', function(e) {
         e.preventDefault();
         scenarioButtons.forEach(function(b) {
-          b.classList.remove('is-active', 'border-primary', 'bg-primary/10');
+          b.classList.remove('is-active');
           b.style.borderColor = '';
         });
         btn.classList.add('is-active');
         btn.style.borderColor = 'var(--cyan)';
 
-        if (idx === 0) {
-          setAmount(420, '100K', 0.05);
-        } else if (idx === 1) {
-          setAmount(1180, '1.5M', 0.35);
-        } else {
-          setAmount(3750, '5M', 0.75);
-        }
+        if (idx === 0) setAmount(420, 0.05);
+        else if (idx === 1) setAmount(1180, 0.35);
+        else setAmount(3750, 0.75);
       });
     });
 
-    // Slider interaction
     if (slider) {
       slider.style.cursor = 'pointer';
       var thumb = slider.querySelector('[data-slot="slider-thumb"]');
@@ -131,14 +213,10 @@
         var rect = slider.getBoundingClientRect();
         var clientX = e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
         var pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
-        
-        // 100k to 10M
-        var views = Math.round(100000 + pct * 9900000);
-        // Formula: between $400 and $6500
         var rewards = Math.round(400 + Math.pow(pct, 0.8) * 6100);
 
         scenarioButtons.forEach(function(b) { b.style.borderColor = ''; });
-        setAmount(rewards, views >= 1000000 ? (views / 1000000).toFixed(1) + 'M' : Math.round(views / 1000) + 'K', pct);
+        setAmount(rewards, pct);
       }
 
       slider.addEventListener('click', onSliderMove);
@@ -148,7 +226,6 @@
       window.addEventListener('mousemove', function(e) { if (isDragging) onSliderMove(e); });
     }
 
-    // 30 Daily bars interaction
     bars.forEach(function(bar, idx) {
       bar.style.cursor = 'pointer';
       bar.addEventListener('click', function(e) {
@@ -160,7 +237,6 @@
         bar.setAttribute('aria-pressed', 'true');
         bar.style.backgroundColor = 'var(--cyan)';
 
-        // Show note below
         var note = calc.querySelector('.interactive-reward-chart + p, .calc-chart + p');
         var dayEarnings = (parseFloat(bar.style.height || '2') * 1.85).toFixed(2);
         if (note) {
@@ -171,7 +247,7 @@
   }
 
   // ==========================================
-  // 3. ACCOUNT CONFIGURATOR (Screenshots 2 & 3)
+  // 4. CONFIGURATOR (Preserving Flag & Clean Summary)
   // ==========================================
   function initConfigurator() {
     var configSection = document.querySelector('.config-section, .config-grid');
@@ -199,39 +275,52 @@
     var summary = configSection.querySelector('.config-summary');
 
     function updateConfigState() {
-      // Calculate total price
       var base = basePrices[selectedRegion] || 265;
-      // Extra followers: +€15 per 10k above 10k
       var extraFollowersCost = Math.round(((followersCount - 10000) / 10000) * 15);
       var verificationCost = needVerification ? 100 : 0;
       var subtotal = base + extraFollowersCost + verificationCost;
       var total = isUrgent ? Math.round(subtotal * 1.2) : subtotal;
 
-      // Update Summary Side
       if (summary) {
-        // Country Name & Flag
-        var countryEl = summary.querySelector('.summary-country, h3');
-        if (countryEl) countryEl.textContent = regionNames[selectedRegion] || 'Франция';
+        // Flag image - preserve tag!
+        var flagImg = summary.querySelector('.summary-country img, img.country-flag');
+        if (flagImg) {
+          flagImg.src = regionFlags[selectedRegion] || 'fonts/fr.svg';
+        }
 
-        // Followers line
-        var packageLine = summary.querySelector('.summary-package span:last-child, .summary-line:nth-child(2) span:last-child');
-        if (packageLine) packageLine.textContent = followersCount.toLocaleString() + ' подписчиков';
+        // Title country name
+        var titleH3 = summary.querySelector('h3');
+        if (titleH3) {
+          titleH3.textContent = regionNames[selectedRegion] || 'Франция';
+        }
 
-        // Verification line
-        var verifLine = summary.querySelector('.summary-line:nth-child(3) span:last-child, [data-summary-verification]');
-        if (verifLine) verifLine.textContent = needVerification ? 'Да (+€100)' : 'Нет';
+        // Followers count in summary
+        var followersStrong = summary.querySelector('.summary-package strong');
+        if (followersStrong) {
+          followersStrong.textContent = followersCount.toLocaleString();
+        }
 
-        // Price
-        var priceEl = summary.querySelector('.config-price strong, .config-price span:first-child');
-        if (priceEl) priceEl.textContent = '€' + total;
+        // Verification line in summary
+        var verifStrong = summary.querySelector('.summary-line:nth-of-type(2) strong');
+        if (verifStrong) {
+          verifStrong.textContent = needVerification ? 'Да (+€100)' : 'Нет';
+        }
 
-        var priceSub = summary.querySelector('.config-price span:last-child');
-        if (priceSub) priceSub.textContent = followersCount.toLocaleString() + ' подписчиков • ' + (regionNames[selectedRegion] || 'Франция');
+        // Price in summary
+        var priceStrong = summary.querySelector('.config-price strong');
+        if (priceStrong) {
+          priceStrong.innerHTML = '€ ' + total;
+        }
 
-        // Order Note
-        var noteEl = summary.querySelector('.config-order-note');
-        if (noteEl) {
-          noteEl.textContent = isUrgent ? 'Передача за 3–5 часов с момента покупки (Срочно).' : 'Передача за 12–24 часа с момента покупки.';
+        var priceSmall = summary.querySelector('.config-price small');
+        if (priceSmall) {
+          priceSmall.textContent = followersCount.toLocaleString() + ' подписчиков • ' + (regionNames[selectedRegion] || 'Франция');
+        }
+
+        // Urgency note in summary
+        var noteStrong = summary.querySelector('.config-order-note strong');
+        if (noteStrong) {
+          noteStrong.textContent = isUrgent ? 'Передача за 3–5 часов' : 'Передача за 12–24 часа';
         }
 
         // Button link to Telegram
@@ -249,7 +338,7 @@
       }
     }
 
-    // Step 01: Regions
+    // Regions selection
     var regionOptions = configSection.querySelectorAll('.region-option, label.region-option');
     regionOptions.forEach(function(opt) {
       opt.style.cursor = 'pointer';
@@ -278,7 +367,7 @@
       });
     });
 
-    // Step 02: Followers slider
+    // Followers slider
     var followersSlider = configSection.querySelector('.control-step:nth-child(2) [data-slot="slider"], .followers-slider');
     var followersDisplay = configSection.querySelector('.control-step:nth-child(2) .font-mono, .control-step:nth-child(2) .step-value, .control-step:nth-child(2) .text-xl, .control-step:nth-child(2) strong');
     if (followersSlider) {
@@ -292,7 +381,6 @@
         var clientX = e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
         var pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
         
-        // 10 000 to 100 000 in steps of 1000
         followersCount = Math.round((10000 + pct * 90000) / 1000) * 1000;
         
         if (fRange) fRange.style.right = ((1 - pct) * 100) + '%';
@@ -309,7 +397,7 @@
       window.addEventListener('mousemove', function(e) { if (isDragF) handleFollowers(e); });
     }
 
-    // Step 03: Verification (Да / Нет)
+    // Verification (Да / Нет)
     var binaryOptions = configSection.querySelectorAll('.binary-option, label.binary-option');
     binaryOptions.forEach(function(opt) {
       opt.style.cursor = 'pointer';
@@ -329,7 +417,7 @@
       });
     });
 
-    // Step 04: Urgency (12-24 ч / 3-5 ч)
+    // Urgency (12-24 ч / 3-5 ч)
     var deliveryOptions = configSection.querySelectorAll('.delivery-option, label.delivery-option');
     deliveryOptions.forEach(function(opt) {
       opt.style.cursor = 'pointer';
@@ -349,7 +437,7 @@
       });
     });
 
-    // Copy parameters button
+    // Copy parameters
     var copyBtn = summary ? summary.querySelector('.copy-config, button.copy-config') : null;
     if (copyBtn) {
       copyBtn.style.cursor = 'pointer';
@@ -372,16 +460,15 @@
   }
 
   // ==========================================
-  // 4. SERVICES PHONES & SCREENS (Screenshots 4 & 5)
+  // 5. SERVICES PHONES
   // ==========================================
   function initServicesPhones() {
-    // Phone 1: Tax Help / USA Verification
     var taxStage = document.querySelector('.service-phone-stage, .service-preview');
     if (taxStage) {
-      var tabs = document.querySelectorAll('.service-preview-link, [role="tablist"] button, .service-toggle button');
+      var tabs = document.querySelectorAll('.service-phone-tabs button, .service-preview-link, [role="tablist"] button');
       var screen1 = taxStage.querySelector('.identity-screen, [data-screen="identity"], .service-screen-0');
       var screen2 = taxStage.querySelector('.tax-screen, [data-screen="tax"], .service-screen-1');
-      var gotItBtn = taxStage.querySelector('.service-phone button, .phone-viewport button, button.phone-pink');
+      var gotItBtn = taxStage.querySelector('.identity-got-it, .service-phone button, .phone-viewport button, button.phone-pink');
 
       function switchTaxScreen(screenIndex) {
         tabs.forEach(function(t, i) {
@@ -414,14 +501,12 @@
         gotItBtn.style.cursor = 'pointer';
         gotItBtn.addEventListener('click', function(e) {
           e.preventDefault();
-          // Animate checkmark or toggle next step
           gotItBtn.textContent = '✓ Verified!';
           setTimeout(function() { gotItBtn.textContent = 'Got it >'; }, 1500);
         });
       }
     }
 
-    // Phone 2: CRP Activation Phone
     var actStage = document.querySelector('.activation-phone-stage');
     if (actStage) {
       var benefitCards = actStage.querySelectorAll('.activation-benefit');
@@ -448,7 +533,6 @@
         });
       }
 
-      // Input Followers
       var followersInp = document.querySelector('#activation-followers, input[type="number"]');
       if (followersInp) {
         followersInp.addEventListener('input', function() {
@@ -464,47 +548,7 @@
   }
 
   // ==========================================
-  // 5. HERO 3D PHONE (First Screen)
-  // ==========================================
-  function initHeroPhone() {
-    var phone = document.querySelector('.phone-stage, #phone-demo');
-    if (!phone) return;
-
-    var tabButtons = phone.querySelectorAll('.phone-profile-tabs button, .phone-tabs button, [role="tab"]');
-    tabButtons.forEach(function(btn) {
-      btn.style.cursor = 'pointer';
-      btn.addEventListener('click', function(e) {
-        e.preventDefault();
-        tabButtons.forEach(function(b) {
-          b.setAttribute('aria-selected', 'false');
-          b.classList.remove('active');
-        });
-        btn.setAttribute('aria-selected', 'true');
-        btn.classList.add('active');
-      });
-    });
-
-    var pinkBtn = phone.querySelector('.phone-pink');
-    if (pinkBtn) {
-      pinkBtn.style.cursor = 'pointer';
-      pinkBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        window.open('https://t.me/satori_tok', '_blank');
-      });
-    }
-
-    var handleBtn = phone.querySelector('.profile-handle');
-    if (handleBtn) {
-      handleBtn.style.cursor = 'pointer';
-      handleBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        window.open('https://t.me/satori_tok', '_blank');
-      });
-    }
-  }
-
-  // ==========================================
-  // 6. ACCORDIONS (Services & FAQ)
+  // 6. ACCORDIONS
   // ==========================================
   function initAccordions() {
     document.addEventListener('click', function(e) {
@@ -526,7 +570,6 @@
       }
     });
 
-    // "Розкрити все" / "Раскрыть все" / "Expand all"
     document.addEventListener('click', function(e) {
       var target = e.target.closest('button, a');
       if (!target) return;
@@ -650,29 +693,6 @@
         menuBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
       };
     }
-  }
-
-  // ==========================================
-  // 9. AUDIO PLAYERS
-  // ==========================================
-  function initAudioPlayers() {
-    document.querySelectorAll('.audio-card, [data-audio-player], .voice-review').forEach(function(card) {
-      var btn = card.querySelector('button');
-      var audio = card.querySelector('audio');
-      if (btn && audio) {
-        btn.onclick = function(e) {
-          e.preventDefault();
-          if (audio.paused) {
-            document.querySelectorAll('audio').forEach(function(a) { a.pause(); });
-            audio.play();
-            btn.classList.add('playing');
-          } else {
-            audio.pause();
-            btn.classList.remove('playing');
-          }
-        };
-      }
-    });
   }
 
   if (document.readyState === 'loading') {
